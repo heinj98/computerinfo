@@ -43,7 +43,6 @@ $xaml.SelectNodes("//*[@*[contains(translate(name(.),'n','N'),'Name')]]")  | For
 
   }
 
-
 $Browse_btn.Add_Click({
 $fd = New-Object system.windows.forms.openfiledialog
 $fd.InitialDirectory = "c:\scripts"
@@ -73,8 +72,8 @@ switch($button) {
 }
 
 Function Get-Processes {
-if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = Get-Process } 
-else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { $Processes = Get-Process -Computername $Computername ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = $Processes } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }  
+if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; Format-Processes ; $Results_dtgrd.ItemsSource = $Processes } 
+else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { Format-Processes ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = $Processes } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }  
 }
 
 Function Get-Services {
@@ -82,14 +81,19 @@ if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_acti
 else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { $Services = Get-Service -Computername $Computername ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Services" ; $Results_dtgrd.ItemsSource = $Services } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }
 }
 
+function Format-Processes {
+if ($Computername -ne "localhost") { $script:Processes = Get-Process -Computername $Computername | Select-Object -property "Name", "Handles", "VM", "PM", "NPM", "Path"}
+else { $script:Processes = Get-Process | Select-Object -property "Name", "Handles", "VM", "PM", "NPM", "Path" }
+}
+
 $Processes_btn.Add_Click({
 $button = "processes"
 Get-ComputerName $button
 })
 
-
 $Services_btn.Add_Click({
 $button = "services"
 Get-ComputerName $button
 })
+
 $Window.ShowDialog() | out-null
