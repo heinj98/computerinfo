@@ -61,17 +61,17 @@ foreach ($name in $names) { $ComputerNames_lstbx.items.add($name) }
 
 function Get-ComputerName {
         if ([string]::IsNullOrEmpty($ComputerNames_lstbx.SelectedItem) -and ([string]::IsNullOrEmpty($Text_bx.Text))) { 
-            $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+            $error = [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
             return 
          }
         if ($Chkbx_txtbx.IsChecked -and $Text_bx.Text) { $Computername = $Text_bx.Text }
         if ( -not ($Chkbx_txtbx.IsChecked) -and $ComputerNames_lstbx.SelectedItem) { $Computername = $ComputerNames_lstbx.SelectedItem } 
         if ($Chkbx_txtbx.IsChecked -and ([string]::IsNullorEmpty($Text_bx.Text))) { 
-            $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+            $error = [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
             return
          }
         if (-not($Chkbx_txtbx.IsChecked) -and $Text_bx.Text -and (-not ($ComputerNames_lstbx.SelectedItem))) { 
-            [System.Windows.Forms.Messagebox]::Show("Please ensure 'TextBox' is checked.","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+            $error = [System.Windows.Forms.Messagebox]::Show("Please ensure 'TextBox' is checked.","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
              return 
              }
         switch($button) {
