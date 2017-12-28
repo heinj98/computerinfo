@@ -60,25 +60,59 @@ foreach ($name in $names) { $ComputerNames_lstbx.items.add($name) }
 })
 
 function Get-ComputerName {
-if ([string]::IsNullOrEmpty($ComputerNames_lstbx.SelectedItem) -and ([string]::IsNullOrEmpty($Text_bx.Text))) { $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) ; return }
-if ($Chkbx_txtbx.IsChecked -and $Text_bx.Text) { $Computername = $Text_bx.Text }
-if ( -not ($Chkbx_txtbx.IsChecked) -and $ComputerNames_lstbx.SelectedItem) { $Computername = $ComputerNames_lstbx.SelectedItem } 
-if ($Chkbx_txtbx.IsChecked -and ([string]::IsNullorEmpty($Text_bx.Text))) { $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) ; return }
-if (-not($Chkbx_txtbx.IsChecked) -and $Text_bx.Text -and (-not ($ComputerNames_lstbx.SelectedItem))) { [System.Windows.Forms.Messagebox]::Show("Please ensure 'TextBox' is checked.","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) ; return }
-switch($button) {
-    "processes" { Get-Processes $Computername }
-    "services"  { Get-Services $Computername }
-   }
+        if ([string]::IsNullOrEmpty($ComputerNames_lstbx.SelectedItem) -and ([string]::IsNullOrEmpty($Text_bx.Text))) { 
+            $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+            return 
+         }
+        if ($Chkbx_txtbx.IsChecked -and $Text_bx.Text) { $Computername = $Text_bx.Text }
+        if ( -not ($Chkbx_txtbx.IsChecked) -and $ComputerNames_lstbx.SelectedItem) { $Computername = $ComputerNames_lstbx.SelectedItem } 
+        if ($Chkbx_txtbx.IsChecked -and ([string]::IsNullorEmpty($Text_bx.Text))) { 
+            $oReturn= [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+            return
+         }
+        if (-not($Chkbx_txtbx.IsChecked) -and $Text_bx.Text -and (-not ($ComputerNames_lstbx.SelectedItem))) { 
+            [System.Windows.Forms.Messagebox]::Show("Please ensure 'TextBox' is checked.","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+             return 
+             }
+        switch($button) {
+            "processes" { Get-Processes $Computername }
+            "services"  { Get-Services $Computername }
+        }
 }
 
 Function Get-Processes {
-if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; Format-Processes $Computername ; $Results_dtgrd.ItemsSource = $Processes } 
-else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { Format-Processes $Computername ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = $Processes } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }  
+    if ($Computername -eq "localhost") { 
+        $Text_bx.Text = $Computername 
+        $Txtbx_action2.Text = "Processes" 
+        Format-Processes $Computername 
+        $Results_dtgrd.ItemsSource = $Processes 
+        } 
+    else { 
+        if (-not ([string]::IsNullOrEmpty($Computername))) { 
+            try { 
+                Format-Processes $Computername  $Text_bx.Text = $Computername 
+                $Txtbx_action2.Text = "Processes" 
+                $Results_dtgrd.ItemsSource = $Processes 
+                } 
+            catch { 
+                $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+                } 
+            } 
+      }  
 }
 
 Function Get-Services {
-if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Services" ; $Results_dtgrd.ItemsSource = Get-Service } 
-else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { $Services = Get-Service -Computername $Computername ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Services" ; $Results_dtgrd.ItemsSource = $Services } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }
+    if (-not ([string]::IsNullOrEmpty($Computername))) { 
+        try { 
+            Format-Services $Computername 
+            $Text_bx.Text = $Computername 
+            $Txtbx_action2.Text = "Services" 
+            $Results_dtgrd.ItemsSource = $Services 
+            } 
+        catch { 
+            $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+                 } 
+         }
 }
 
 function Format-Processes {
@@ -93,6 +127,18 @@ function Format-Processes {
                 "Path"                 = $Proc.Path
             }
       }        
+}
+
+Function Format-Services {
+        $Servicestmp = Get-Service -Computername $Computername
+        $script:Services = foreach ($Service in $Servicestmp) {
+            [pscustomobject]@{
+                "Service Name" = $Service.Name
+                "Display Name" = $Service.DisplayName
+                "Status"       = $Service.Status
+                "Startup Type" = $Service.StartType
+                }
+        }
 }
 $Processes_btn.Add_Click({
 $button = "processes"
