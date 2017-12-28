@@ -159,9 +159,9 @@ function Format-Disks {
     $script:Disks = foreach ($disk in $Diskstmp) {
     $drivetype = $disk.DriveType 
     switch($drivetype) {
-            "3" { $script:description = "Local Fixed Disk" }
-            "4" { $script:description = "Network Disk" }
-            "5" { $script:description = "CD-ROM" }
+            "3" { $description = "Local Fixed Disk" }
+            "4" { $description = "Network Disk" }
+            "5" { $description = "CD-ROM" }
             } 
       
         if ($disk.size -ge 1TB) { $dsize = [math]::round($disk.size /1TB) ; $size = "$dsize TB" }
