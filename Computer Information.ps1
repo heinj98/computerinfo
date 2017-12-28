@@ -72,8 +72,8 @@ switch($button) {
 }
 
 Function Get-Processes {
-if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; Format-Processes ; $Results_dtgrd.ItemsSource = $Processes } 
-else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { Format-Processes ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = $Processes } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }  
+if ($Computername -eq "localhost") { $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; Format-Processes $Computername ; $Results_dtgrd.ItemsSource = $Processes } 
+else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { Format-Processes $Computername ; $Text_bx.Text = $Computername ; $Txtbx_action2.Text = "Processes" ; $Results_dtgrd.ItemsSource = $Processes } catch { $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) } } }  
 }
 
 Function Get-Services {
@@ -82,10 +82,18 @@ else { if (-not ([string]::IsNullOrEmpty($Computername))) { try { $Services = Ge
 }
 
 function Format-Processes {
-if ($Computername -ne "localhost") { $script:Processes = Get-Process -Computername $Computername | Select-Object -property "Name", "Handles", "VM", "PM", "NPM", "Path"}
-else { $script:Processes = Get-Process | Select-Object -property "Name", "Handles", "VM", "PM", "NPM", "Path" }
+        if ($Computername -eq "localhost") { $Procstmp = Get-Process } else { $Procstmp = Get-Process -Computername $Computername }
+        $script:Processes = foreach ($Proc in $Procstmp) {
+            [pscustomobject]@{
+                "Process Name"         = $Proc.Name
+                "Virtual Memory(MB)"   = [math]::round(($Proc.VM / 1MB))
+                "Physical Memory(MB)"  = [math]::round(($Proc.PM) / 1MB)
+                "Non-Paged Memory(KB)" = [math]::round(($Proc.NPM) / 1KB)
+                "Handles"              = ($Proc).Handles
+                "Path"                 = $Proc.Path
+            }
+      }        
 }
-
 $Processes_btn.Add_Click({
 $button = "processes"
 Get-ComputerName $button
