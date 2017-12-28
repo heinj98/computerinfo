@@ -38,25 +38,23 @@ Add-Type -AssemblyName System.Windows.Forms
 $reader= New-Object System.Xml.XmlNodeReader $xaml
 $Window=[Windows.Markup.XamlReader]::Load( $reader )
 $xaml.SelectNodes("//*[@*[contains(translate(name(.),'n','N'),'Name')]]")  | ForEach {
-
   New-Variable  -Name $_.Name -Value $Window.FindName($_.Name) -Force
-
-  }
+}
 
 $Browse_btn.Add_Click({
-$fd = New-Object system.windows.forms.openfiledialog
-$fd.InitialDirectory = "c:\scripts"
-$fd.Filter = "Text Files (*.txt)|*.txt"
-$fd.showdialog() | out-null
-$fd.FileName
-if ($fd.FileName) {
-$names = get-content -path $fd.FileName
-if ($ComputerNames_lstbx.Items.Count -ge 1) { $ComputerNames_lstbx.Items.Clear() }
-$Results_dtgrd.ItemsSource = $null
-$Text_bx.Text = $null
-$Txtbx_action2.Text = $null 
-foreach ($name in $names) { $ComputerNames_lstbx.items.add($name) }
-}
+    $fd = New-Object system.windows.forms.openfiledialog
+    $fd.InitialDirectory = "c:\scripts"
+    $fd.Filter = "Text Files (*.txt)|*.txt"
+    $fd.showdialog() | out-null
+    $fd.FileName
+    if ($fd.FileName) {
+        $names = get-content -path $fd.FileName
+        if ($ComputerNames_lstbx.Items.Count -ge 1) { $ComputerNames_lstbx.Items.Clear() }
+        $Results_dtgrd.ItemsSource = $null
+        $Text_bx.Text = $null
+        $Txtbx_action2.Text = $null 
+        foreach ($name in $names) { $ComputerNames_lstbx.items.add($name) }
+    }
 })
 
 function Get-ComputerName {
@@ -65,7 +63,7 @@ function Get-ComputerName {
             return 
          }
         if ($Chkbx_txtbx.IsChecked -and $Text_bx.Text) { $Computername = $Text_bx.Text }
-        if ( -not ($Chkbx_txtbx.IsChecked) -and $ComputerNames_lstbx.SelectedItem) { $Computername = $ComputerNames_lstbx.SelectedItem } 
+        if ( -not ($Chkbx_txtbx.IsChecked) -and $ComputerNames_lstbx.SelectedItem) { $Computername = $ComputerNames_lstbx.SelectedItem; $Text_bx.Text = $Computername } 
         if ($Chkbx_txtbx.IsChecked -and ([string]::IsNullorEmpty($Text_bx.Text))) { 
             $error = [System.Windows.Forms.Messagebox]::Show("This action requires a ComputerName","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
             return
@@ -140,14 +138,15 @@ Function Format-Services {
                 }
         }
 }
+
 $Processes_btn.Add_Click({
-$button = "processes"
-Get-ComputerName $button
+    $button = "processes"
+    Get-ComputerName $button
 })
 
 $Services_btn.Add_Click({
-$button = "services"
-Get-ComputerName $button
+    $button = "services"
+    Get-ComputerName $button
 })
 
 $Window.ShowDialog() | out-null
