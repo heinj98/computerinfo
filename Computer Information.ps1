@@ -75,6 +75,7 @@ function Get-ComputerName {
         switch($button) {
             "processes" { Get-Processes $Computername }
             "services"  { Get-Services $Computername }
+            "disks"     { Get-Disks $Computername }
         }
 }
 
@@ -113,6 +114,20 @@ Function Get-Services {
          }
 }
 
+function Get-Disks {
+if (-not ([string]::IsNullOrEmpty($Computername))) { 
+        try { 
+            Format-Disks $Computername 
+            $Text_bx.Text = $Computername 
+            $Txtbx_action2.Text = "Disks" 
+            $Results_dtgrd.ItemsSource = $Disks 
+            } 
+        catch { 
+            $error = [System.Windows.Forms.Messagebox]::Show("$_","Error",[System.Windows.Forms.MessageBoxButtons]::OK,[System.Windows.Forms.MessageBoxIcon]::Error) 
+                 } 
+         }
+}
+
 function Format-Processes {
         if ($Computername -eq "localhost") { $Procstmp = Get-Process } else { $Procstmp = Get-Process -Computername $Computername }
         $script:Processes = foreach ($Proc in $Procstmp) {
@@ -139,6 +154,45 @@ Function Format-Services {
         }
 }
 
+function Format-Disks {
+    $Diskstmp = (Get-WmiObject -class Win32_logicaldisk -Computername $Computername | Where-Object {$_.DriveType -eq "3" -or $_.DriveType -eq "4" -or $_.DriveType -eq "5"})
+    $script:Disks = foreach ($disk in $Diskstmp) {
+    $drivetype = $disk.DriveType 
+    switch($drivetype) {
+            "3" { $script:description = "Local Fixed Disk" }
+            "4" { $script:description = "Network Disk" }
+            "5" { $script:description = "CD-ROM" }
+            } 
+      
+        if ($disk.size -ge 1TB) { $dsize = [math]::round($disk.size /1TB) ; $size = "$dsize TB" }
+        if ($disk.size -ge 1GB -and $disk.size -lt 1TB) { $dsize = [math]::round($disk.size /1GB) ; $size = "$dsize GB" }
+        if ($disk.size -lt 1GB -and $disk.size -ge 1MB) { $dsize = [math]::round($disk.size /1MB) ; $size = "$dsize MB" }
+        if ($disk.size -lt 1MB -and $disk.size -ge 1KB) { $dsize = [math]::round($disk.size /1KB) ; $size = "$dsize KB" }
+        if ($disk.size -eq $null) { $size = $null }
+        if ($disk.drivetype -eq "5") { $size = $null}
+        
+        if ($disk.freespace -ge 1TB) { $dfstmp = [math]::round($disk.freespace / 1TB) ; $dfsize = "$dfstmp TB" }
+        if ($disk.freespace -ge 1GB -and $disk.freespace -lt 1TB) { $dfstmp = [math]::round($disk.freespace / 1GB) ; $dfsize = "$dfstmp GB" }
+        if ($disk.freespace -lt 1GB -and $disk.freespace -ge 1MB) { $dfstmp = [math]::round($disk.freespace / 1MB) ; $dfsize = "$dfstmp MB" }
+        if ($disk.freespace -lt 1MB -and $disk.freespace -ge 1KB) { $dfstmp = [math]::round($disk.freespace / 1KB) ; $dfsize = "$dfstmp KB" }
+        if ($disk.freespace -eq $null) { $dfsize = $null }
+        if ($disk.drivetype -eq "5") { $dfsize = $null }
+
+        if (-not([string]::IsNullOrEmpty($disk.freespace)) -and (-not([string]::IsNullOrEmpty($disk.size)))) { $dfptmp = [math]::round((($disk.freespace / $disk.size) * 100)) }
+        $dfp = "$dfptmp %"
+        if ($disk.drivetype -eq "5") { $dfp = $null}
+                      
+        [pscustomobject]@{
+        "Drive Letter"     = $disk.DeviceId
+        "Description"      = $description
+        "Size"             = $size
+        "Free Space"       = $dfsize
+        "% Free Space"     = $dfp
+        "Network Location" = $disk.ProviderName
+               }
+             
+       }
+}
 $Processes_btn.Add_Click({
     $button = "processes"
     Get-ComputerName $button
@@ -147,6 +201,10 @@ $Processes_btn.Add_Click({
 $Services_btn.Add_Click({
     $button = "services"
     Get-ComputerName $button
+})
+$Disks_btn.Add_Click({
+    $button = "disks"
+    Get-Computername $button
 })
 
 $Window.ShowDialog() | out-null
