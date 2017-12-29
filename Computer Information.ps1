@@ -89,7 +89,8 @@ Function Get-Processes {
     else { 
         if (-not ([string]::IsNullOrEmpty($Computername))) { 
             try { 
-                Format-Processes $Computername  $Text_bx.Text = $Computername 
+                Format-Processes $Computername 
+                $Text_bx.Text = $Computername 
                 $Txtbx_action2.Text = "Processes" 
                 $Results_dtgrd.ItemsSource = $Processes 
                 } 
@@ -155,7 +156,7 @@ Function Format-Services {
 }
 
 function Format-Disks {
-    $Diskstmp = (Get-WmiObject -class Win32_logicaldisk -Computername $Computername | Where-Object {$_.DriveType -eq "3" -or $_.DriveType -eq "4" -or $_.DriveType -eq "5"})
+    $Diskstmp = (Get-WmiObject -class Win32_logicaldisk -Computername $Computername -ErrorAction Stop| Where-Object {$_.DriveType -eq "3" -or $_.DriveType -eq "4" -or $_.DriveType -eq "5"})
     $script:Disks = foreach ($disk in $Diskstmp) {
     $drivetype = $disk.DriveType 
     switch($drivetype) {
